@@ -1,0 +1,21 @@
+
+# Visual Studio
+.vs/
+x64/
+Debug/
+Release/
+*.user
+*.suo
+*.db
+*.pdb
+*.iobj
+*.ipdb
+*.tlog
+
+# Build results
+/Aruco3112MiniOpenGL/x64/
+/Aruco3112MiniOpenGL/Debug/
+
+# Temp files
+*.log
+*.tmp
