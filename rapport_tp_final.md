@@ -1,7 +1,7 @@
 # Rapport TP Réalité Augmentée : ArUco & OpenGL
 
-**Auteur :** [Votre Nom]
-**Date :** 09/01/2026
+**Auteurs :** Cheikhou Oumar, Narjisse, Florian
+**Date :** Janvier 2026
 
 ---
 
