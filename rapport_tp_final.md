@@ -8,7 +8,7 @@
 ## Partie 1 : Compilation d'ArUco avec CMake
 
 ### 1. Intérêt de CMake
-CMake est un système de construction **multi-plateforme**. Son intérêt principal est de générer des fichiers de projets natifs (ici `.sln` pour Visual Studio sur Windows, mais ce serait `Makefile` sur Linux) à partir de scripts de configuration indépendants. Cela permet de distribuer le code source d'ArUco et de laisser l'utilisateur le compiler spécifiquement pour son OS et son compilateur.
+CMake est un système de construction **multi-plateforme**. Son intérêt principal est de générer des fichiers de projets natifs (ici `.sln` pour Visual Studio sur Windows) à partir de scripts de configuration indépendants. Cela permet de distribuer le code source d'ArUco et de laisser l'utilisateur le compiler spécifiquement pour son OS et son compilateur.
 
 ### 2. Installation et Chemins
 Les éléments compilés s'installent généralement dans un répertoire `install` ou `build` dédié (défini par `CMAKE_INSTALL_PREFIX`).
@@ -45,10 +45,10 @@ for (auto m : myDetector.detect(myImage)) {
 ```
 
 ### 2. Comportement du Détecteur (Observations)
-*   **Distance** : La détection est robuste tant que le marqueur occupe une taille suffisante (env. 20x20 pixels min). Si on s'éloigne trop, le code binaire interne devient illisible (flou).
-*   **Angle** : La détection résiste bien jusqu'à environ 45-60°. Au-delà, la distorsion trapézoïdale écrase trop les bits du marqueur.
+*   **Distance** : La détection est robuste tant que le marqueur occupe une taille suffisante. Si on s'éloigne trop, le code binaire interne devient illisible (flou).
+*   **Angle** : La détection résiste bien jusqu'à environ 45-60°. Au-delà, la distorsion écrase trop les bits du marqueur.
 *   **Occultation** : Si on cache **un seul coin** ou une partie de la bordure noire, la détection échoue immédiatement. Le contour carré doit être continu.
-*   **Luminosité** : ArUco utilise un seuillage (binarisation). Si l'image est trop sombre ou s'il y a un reflet spéculaire violent sur le papier glacé, le carré n'est pas vu.
+*   **Luminosité** : ArUco utilise un seuillage (binarisation). Si l'image est trop sombre ou si un reflet est violent, le carré n'est pas vu.
 
 ---
 
@@ -61,9 +61,9 @@ La compilation du projet `Aruco3112MiniOpenGL` s'effectue désormais sans erreur
 ---
 
 ## 2. Gestion des Fichiers GLFW
-Les fichiers liés à **GLFW** (bibliothèque de fenêtrage et gestion des contextes OpenGL) ont été placés et liés au projet pour assurer la portabilité.
-*   **Emplacement :** Ils sont situés dans le dossier des dépendances du projet (ou gérés via les propriétés VC++Directories).
-*   **Justification :** Regrouper les dépendances externes (comme GLFW, OpenCV, ArUco) dans un répertoire dédié (ex: `Common7` ou un dossier `libs` local) permet de partager le projet sans obliger l'utilisateur suivant à réinstaller les librairies aux mêmes endroits absolus sur son disque dur.
+Les fichiers liés à **GLFW** ont été placés et liés au projet pour assurer la portabilité.
+*   **Emplacement :** Ils sont situés dans le dossier des dépendances du projet.
+*   **Justification :** Regrouper les dépendances externes (comme GLFW, OpenCV, ArUco) dans un répertoire dédié (`libs` local par exemple) permet de partager le projet sans obliger l'utilisateur suivant à réinstaller les librairies aux mêmes endroits absolus sur son disque dur.
 
 ---
 
@@ -75,10 +75,10 @@ Lors de la reprise du projet, plusieurs erreurs ont dû être corrigées :
     *   *Solution :* Nous avons réordonné les inclusions pour mettre `#include <windows.h>` **avant** `#include <GL/gl.h>`.
 2.  **Espace de Nom ArUco** :
     *   *Erreur :* `Use of undeclared identifier 'aruco'`.
-    *   *Solution :* OpenCV possède aussi un module ArUco. Pour éviter les conflits avec la lib `aruco-3.1.12` locale, nous avons explicitement utilisé le namespace global `::aruco::` ou supprimé les `using namespace cv;` superflus.
+    *   *Solution :* OpenCV possède aussi un module ArUco. Pour éviter les conflits avec la lib `aruco-3.1.12` locale, nous avons explicitement utilisé le namespace global `::aruco::` ou supprimé les `using namespace cv;` superflus à certains endroits.
 3.  **Fichiers Manquants** :
     *   *Erreur :* `opencv2/opencv.hpp not found`.
-    *   *Solution :* Vérification et correction des chemins d'inclusion dans les propriétés du projet (`Additional Include Directories`).
+    *   *Solution :* Vérification et correction des chemins d'inclusion dans les propriétés du projet, dans `Additional Include Directories`.
 
 ---
 
@@ -92,30 +92,30 @@ Le programme se lance correctement avec la caméra (ID 0). Le fichier `camera.ym
 ---
 
 ## 5. Analyse de `ArUco::drawScene()` (vDrawScene)
-La méthode `vDrawScene` (ou `drawScene` dans la version classe) orchestre le rendu en deux étapes principales :
+La méthode `drawScene` gère le rendu en deux étapes principales :
 
 1.  **Rendu 2D (Arrière-plan vidéo) :**
-    *   On désactive le test de profondeur (`glDisable(GL_DEPTH_TEST)`) pour être sûr que l'image vidéo soit toujours "au fond".
+    *   On désactive le test de profondeur (`glDisable(GL_DEPTH_TEST)`) pour être sûr que l'image vidéo soit toujours au fond.
     *   On configure une projection Orthographique (`glOrtho`) qui correspond à la taille de la fenêtre.
     *   On dessine les pixels de l'image caméra (`glDrawPixels`).
 2.  **Rendu 3D (Augmentations) :**
     *   On réactive le test de profondeur (`glEnable(GL_DEPTH_TEST)`).
     *   On charge la matrice de projection calibrée de la caméra (`TheCameraParams.glGetProjectionMatrix`).
     *   **Pour chaque marqueur détecté :**
-        *   On récupère la **ModelViewMatrix** du marqueur (sa position/rotation dans l'espace).
-        *   On applique cette matrice à OpenGL (`glLoadMatrixd`). À cet instant, l'origine `(0,0,0)` du monde OpenGL est **exactement le centre du marqueur**.
-        *   On dessine les objets 3D (Cubes) autour de cette origine.
+        *   On récupère la **ModelViewMatrix** du marqueur, dans laquelle ou trouve sa position/rotation.
+        *   On applique cette matrice à OpenGL (`glLoadMatrixd`).
+        *   On dessine les objets 3D (des cubes dans notre choix d'augmentation) autour de l'origine du marqueur.
 
 ---
 
 ## 6. Nouvelle Augmentation (Personnalisée)
 Nous avons supprimé l'augmentation fil de fer initiale pour proposer un rendu plus avancé :
 - **Cube Solide** : Remplissage complet (`GL_QUADS`).
-- **Effet RGB Rainbow** : Un shader CPU calcule une couleur **Teinte/Saturation/Valeur** (HSV) qui évolue avec le temps (`glfwGetTime`) et l'index du marqueur. Chaque cube a ainsi sa propre couleur changeante.
-- **Physique (Bonus)** : Les cubes interagissent et se repoussent s'ils sont trop proches.
+- **Effet RGB Rainbow** : Un shader CPU calcule une couleur en HSV (Teinte/Saturation/Valeur) qui évolue avec le temps (`glfwGetTime`) et l'index du marqueur pour que chaque cube ait sa propre couleur changeante.
+- **Physique en bonus** : Les cubes interagissent et se repoussent s'ils sont trop proches.
 
 **Preuve de stabilité :**
-Même en bougeant la caméra, les cubes restent "collés" au papier grâce à la matrice ModelView mise à jour à chaque frame par la détection ArUco.
+Même en bougeant la caméra, les cubes restent "collés" au papier grâce à la matrice ModelView mise à jour à chaque frame.
 
 ![Rendu Final Dynamique](assets/rendu_final_v7_dynamique.png)
 
