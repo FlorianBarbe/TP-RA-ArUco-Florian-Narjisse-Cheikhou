@@ -1,3 +1,17 @@
+---
+title: "Rapport TP Réalité Augmentée : ArUco & OpenGL"
+author: "Narjisse El Manssouri, Cheikhou Oumar Ba, Florian Barbe"
+geometry: "margin=2cm"
+header-includes:
+  - \usepackage{graphicx}
+  - \usepackage{float}
+  - \usepackage{fvextra}
+  - \DefineVerbatimEnvironment{Highlighting}{Verbatim}{breaklines,commandchars=\\\{\}}
+  - \usepackage{caption}
+  - \captionsetup{labelformat=empty}
+  - \floatplacement{figure}{H}
+---
+
 # Rapport TP Réalité Augmentée : ArUco & OpenGL
 
 **Auteurs :** Cheikhou Oumar, Narjisse, Florian
@@ -86,8 +100,11 @@ Lors de la reprise du projet, plusieurs erreurs ont dû être corrigées :
 Le programme se lance correctement avec la caméra (ID 0). Le fichier `camera.yml` est chargé pour fournir les paramètres intrinsèques (focale, centre optique) nécessaires au positionnement 3D précis.
 
 **Preuve de fonctionnement (Wireframe - Question 4) :**
-![Validation Wireframe](assets/validation_fil_de_fer_q4.png)
-*Affichage fil de fer basique pour valider la calibration (Q4).*
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.6\textwidth]{assets/validation_fil_de_fer_q4.png}
+\caption{Validation Wireframe : Affichage fil de fer basique pour valider la calibration (Q4).}
+\end{figure}
 
 ---
 
@@ -132,18 +149,22 @@ void vDrawScene() {
     glDisable(GL_DEPTH_TEST);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    glOrtho(0, TheGlWindowSize.width, 0, TheGlWindowSize.height, -1.0, 1.0);
+    glOrtho(0, TheGlWindowSize.width, 0, TheGlWindowSize.height,
+            -1.0, 1.0);
     glViewport(0, 0, TheGlWindowSize.width, TheGlWindowSize.height);
     glPixelZoom(1, -1);
     glRasterPos3f(0, TheGlWindowSize.height - 0.5, -1.0);
-    glDrawPixels(TheGlWindowSize.width, TheGlWindowSize.height, GL_RGB, GL_UNSIGNED_BYTE, TheResizedImage.ptr(0));
+    glDrawPixels(TheGlWindowSize.width, TheGlWindowSize.height, GL_RGB, 
+                 GL_UNSIGNED_BYTE, TheResizedImage.ptr(0));
     
     // 2. Rendu 3D
     glClear(GL_DEPTH_BUFFER_BIT);
     glEnable(GL_DEPTH_TEST);
     glMatrixMode(GL_PROJECTION);
     double proj_matrix[16];
-    TheCameraParams.glGetProjectionMatrix(TheInputImage.size(), TheGlWindowSize, proj_matrix, 0.01, 100);
+    TheCameraParams.glGetProjectionMatrix(TheInputImage.size(),
+                                          TheGlWindowSize, 
+                                          proj_matrix, 0.01, 100);
     glLoadMatrixd(proj_matrix);
 
     // 3. Boucle sur les marqueurs
@@ -183,7 +204,9 @@ void vDrawScene() {
         glBegin(GL_QUADS);
         // ... (Code des vertices du cube) ...
         // Face Avant
-        glNormal3f(0, 0, 1); glVertex3f(-s, -s, s); glVertex3f(s, -s, s); glVertex3f(s, s, s); glVertex3f(-s, s, s);
+        glNormal3f(0, 0, 1); 
+        glVertex3f(-s, -s, s); glVertex3f(s, -s, s); 
+        glVertex3f(s, s, s); glVertex3f(-s, s, s);
         // ... (Autres faces) ...
         glEnd();
         glPopMatrix();
@@ -193,6 +216,8 @@ void vDrawScene() {
 
 ---
 
+\newpage
+
 ## 8. Annexe : Historique du Développement & Bugs Rencontrés
 
 Cette section retrace l'évolution du projet, montrant les problèmes techniques surmontés à chaque étape.
@@ -201,21 +226,37 @@ Cette section retrace l'évolution du projet, montrant les problèmes techniques
 *Objectif : Afficher des cubes sur les marqueurs.*
 *   **État** : Les cubes sont affichés mais flottent parfois ou traversent la table.
 *   **Bug observé** : Manque de réalisme, positions parfois imprécises.
-![V1 Cubes Statiques](assets/v1_cubes_statiques.png)
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.6\textwidth]{assets/v1_cubes_statiques.png}
+\caption{V1 Cubes Statiques}
+\end{figure}
 
 ### Phase 2 : L'Échec des Masques (V4)
 *Objectif : Cacher le marqueur noir avec un carré blanc.*
 *   **Problème Majeur (Z-Fighting)** : Le masque et le cube étaient à la même profondeur. Le moteur de rendu ne savait pas lequel afficher, créant un clignotement désagréable.
-![Bug Z-Fighting](assets/bug_z_fighting_masques.png)
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.6\textwidth]{assets/bug_z_fighting_masques.png}
+\caption{Bug Z-Fighting}
+\end{figure}
 *   **Décision** : Abandonner les masques pour privilégier la fluidité.
 
 ### Phase 3 : Premières Collisions (V5)
 *Objectif : Faire interagir les cubes.*
 *   **Bug observé (Duplication)** : Sans amortissement ni séparation forcée, les cubes restaient "coincés" l'un dans l'autre, vibrant violemment et créant des images fantômes (dédoublement).
-![Bug Collision Instable](assets/bug_collision_instable.png)
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.6\textwidth]{assets/bug_collision_instable.png}
+\caption{Bug Collision Instable}
+\end{figure}
 *   **Correction** : Ajout d'une force de répulsion immédiate (`push`) et réduction de la vitesse (`damping` 0.8).
 
 ### Phase Finale : Rendu Parfait (V7)
 *Objectif : Rendu final stable et esthétique.*
 *   **Résultat** : Plus de bugs visuels, couleurs dynamiques, physique stable.
-![Version Finale V7](assets/rendu_final_v7_dynamique.png)
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.6\textwidth]{assets/rendu_final_v7_dynamique.png}
+\caption{Version Finale V7}
+\end{figure}
