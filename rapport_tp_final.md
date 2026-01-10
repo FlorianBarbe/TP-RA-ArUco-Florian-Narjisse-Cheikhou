@@ -14,8 +14,6 @@ header-includes:
 
 # Rapport TP Réalité Augmentée : ArUco & OpenGL
 
-**Auteurs :** Cheikhou Oumar, Narjisse, Florian
-**Date :** Janvier 2026
 
 ---
 
